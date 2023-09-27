@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "CYl7od5dV6jFCqDD2soIDYKrQ1SfnKC1ta58SZbhAfE=",
+  "Source": "CosmosManagementApi",
+  "BasePath": "_content/CosmosManagementApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
