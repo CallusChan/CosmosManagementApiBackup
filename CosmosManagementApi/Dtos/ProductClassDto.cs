@@ -45,6 +45,7 @@ namespace CosmosManagementApi.Dtos
     /// ProductClassCategory
     /// </summary>
     public string? Category { get; set; }
+    public string? BigCategory{ get; set; }
 
     public int? Storage{ get; set; }
 

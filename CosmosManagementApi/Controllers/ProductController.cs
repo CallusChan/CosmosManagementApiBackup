@@ -130,6 +130,36 @@ namespace CosmosManagementApi.Controllers
       };
     }
 
+        //返还大种类下所有产品
+        // GET: api/GetProdutsInClass<ProductController>
+        [HttpGet("GetProdutsInCategory")]
+        [Authorize(Roles = "O1Staff, Admin")]
+        public IActionResult GetProdutsInCategory(string categorySearch)
+        {
+            var result = _context.Products.Join(_context.ProductCategories, a => a.Id, b => b.ProductId, (a, b) => new { a, b })
+            .Join(_context.ProductClasses, ab => ab.b.ClassId, c => c.Id, (ab, c) => new{ab, c})
+            .Select(m => new 
+            {
+                ProductDate = m.ab.a.ProductDate,
+                ProductEndDate = m.ab.a.ProductEndDate,
+                IfSelled = m.ab.a.IfSelled,
+                CategoryId = m.ab.b.ClassId,
+                BigCategory = m.c.BigCategory,
+            })//join 三表 获取数据
+            .Where(o => o.BigCategory == categorySearch && o.IfSelled == 0).ToList(); //判断条件 选择相应class
+
+            var r_json = new
+            {
+                total = result.Count(),
+                totalNotFiltered = result.Count(),
+                rows = result
+            };
+            return new JsonResult(r_json)
+            {
+                StatusCode = 200,
+            };
+        }
+
     //增加相应种类下产品数 并计入入库账单
     // POST api/<ProductController>
     [HttpPost("AddProduct")]

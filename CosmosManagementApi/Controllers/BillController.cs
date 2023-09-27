@@ -85,7 +85,7 @@ namespace CosmosManagementApi.Controllers
         ProductName = m.pclass.ProductName,
         ProductId = m.pp.product.Id,
         Category = m.pclass.Category,
-        BigCategory = m.pclass.BigCategory,
+        BigCategory = m.pclass.Category,
       }).ToList(); //产品的名字
 
       var StaffTable = _context.Staffs
@@ -190,7 +190,7 @@ namespace CosmosManagementApi.Controllers
       .Select( m => new{
         ProductName = m.pclass.ProductName,
         ProductId = m.pp.product.Id,
-        BigCategory = m.pclass.BigCategory,
+        BigCategory = m.pclass.Category,
       }).ToList(); //产品的名字
 
       var StaffTable = _context.Staffs
@@ -273,9 +273,232 @@ namespace CosmosManagementApi.Controllers
     }
     }
 
-    //获取所有用户购买过的产品的账单
-    //[Authorize(Roles = "Admin")]
-    [HttpGet("CustomerProductBills")]
+        //获取一个月内的bill表单 by category
+        //[Authorize(Roles = "Admin")]
+        [HttpGet("AllBills/{month}/{category}")]
+        public IActionResult GetAllBillsByCategory(int month, string category)
+        {
+            if (month == 13)
+            {
+                var CustomerProductBillTable = _context.Bills.Join(_context.CustomerProductBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cproductbill) => new { bill, cproductbill })
+                 .Join(_context.Customers, bcprb => bcprb.cproductbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
+                 .Select(m => new
+                 {
+                     Date = m.bcprd.bill.Time,
+                     BillNo = m.bcprd.bill.BillId,
+                     CustomerId = m.customer.CustomerId,
+                     CustomerName = m.customer.NameCn,
+                     PaymentMethod = m.bcprd.cproductbill.PaymentMethod,
+                     AmountSum = m.bcprd.bill.FinalPrice,
+                     Comment = m.bcprd.bill.Comment,
+                     BillId = m.bcprd.bill.Id,
+                     ProductId = m.bcprd.cproductbill.ProductId,
+                     StaffId = m.bcprd.cproductbill.StaffId,
+                     Time = m.bcprd.bill.Time,//分月份来
+                     BigCategory = m.bcprd.cproductbill.BigCategory, //用于对账分类
+                 }).Where(m => m.BigCategory == category).ToList();
+
+                var ProductTable = _context.Products
+                .Join(_context.ProductCategories, product => product.Id, pcategory => pcategory.ProductId, (product, pcategory) => new { product, pcategory })
+                .Join(_context.ProductClasses, pp => pp.pcategory.ClassId, pclass => pclass.Id, (pp, pclass) => new { pp, pclass })
+                .Select(m => new {
+                    ProductName = m.pclass.ProductName,
+                    ProductId = m.pp.product.Id,
+                    Category = m.pclass.Category,
+                    BigCategory = m.pclass.Category,
+                }).Where(m => m.BigCategory == category).ToList(); //产品的名字
+
+                var StaffTable = _context.Staffs
+                .Join(_context.Departments, staff => staff.DepartmentId, department => department.Id, (staff, department) => new { staff, department })
+                .Select(m => new
+                {
+                    StaffId = m.staff.Id,
+                    StaffName = m.staff.StaffName,
+                    Department = m.department.DepartmentName,
+                }).ToList();//员工的表
+
+                var CustomerProjectBillTable = _context.Bills.Join(_context.CustomerProjectBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cprojectbill) => new { bill, cprojectbill })
+                .Join(_context.Customers, bcprb => bcprb.cprojectbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
+                .Join(_context.Projects, c => c.bcprd.cprojectbill.ProjectId, product => product.Id, (c, product) => new { c, product })
+                .Select(m => new
+                {
+                    Date = m.c.bcprd.bill.Time,
+                    BillNo = m.c.bcprd.bill.BillId,
+                    CustomerId = m.c.customer.CustomerId,
+                    CustomerName = m.c.customer.NameCn,
+                    PaymentMethod = m.c.bcprd.cprojectbill.PaymentMethod,
+                    AmountSum = m.c.bcprd.bill.FinalPrice,
+                    Comment = m.c.bcprd.bill.Comment,
+                    ProjectName = m.product.ProjectName,
+                    ProductId = m.product.Id,
+                    BillId = m.c.bcprd.bill.Id,
+                    StaffId = m.c.bcprd.cprojectbill.Staffid,
+                    Time = m.c.bcprd.bill.Time,
+                    BigCategory = m.c.bcprd.cprojectbill.BigCategory,
+                }).Where(m => m.BigCategory == category).ToList();
+
+                var productTableFinal = CustomerProductBillTable.Join(ProductTable, cpbt => cpbt.ProductId, pt => pt.ProductId, (cpbt, pt) => new { cpbt, pt })
+                .Join(StaffTable, cpbtpt => cpbtpt.cpbt.StaffId, staff => staff.StaffId, (cpbtpt, staff) => new { cpbtpt, staff })
+                .Select(m => new AllBillsDto
+                {
+                    Date = m.cpbtpt.cpbt.Date,
+                    BillNo = m.cpbtpt.cpbt.BillNo,
+                    CustomerNo = m.cpbtpt.cpbt.CustomerId,
+                    CustomerName = m.cpbtpt.cpbt.CustomerName,
+                    Name = m.cpbtpt.pt.ProductName,
+                    PaymentMethod = m.cpbtpt.cpbt.PaymentMethod,
+                    AmountSum = m.cpbtpt.cpbt.AmountSum,
+                    Department = m.staff.Department,
+                    Comment = m.cpbtpt.cpbt.Comment,
+                    StaffName = m.staff.StaffName,
+                    BillType = "产品",
+                    BigCategory = m.cpbtpt.cpbt.BigCategory,
+                }).ToList();
+
+                var projectTableFinal = CustomerProjectBillTable
+                .Join(StaffTable, cpbtpt => cpbtpt.StaffId, staff => staff.StaffId, (cpbtpt, staff) => new { cpbtpt, staff })
+                .Select(m => new AllBillsDto
+                {
+                    Date = m.cpbtpt.Date,
+                    BillNo = m.cpbtpt.BillNo,
+                    CustomerNo = m.cpbtpt.CustomerId,
+                    CustomerName = m.cpbtpt.CustomerName,
+                    Name = m.cpbtpt.ProjectName,
+                    PaymentMethod = m.cpbtpt.PaymentMethod,
+                    AmountSum = m.cpbtpt.AmountSum,
+                    Department = m.staff.Department,
+                    Comment = m.cpbtpt.Comment,
+                    StaffName = m.staff.StaffName,
+                    BillType = "项目",
+                    BigCategory = m.cpbtpt.BigCategory,
+                }).ToList();
+
+                productTableFinal.AddRange(projectTableFinal);
+                var r_json = new
+                {
+                    total = productTableFinal.Count(),
+                    totalNotFiltered = productTableFinal.Count(),
+                    rows = productTableFinal
+                };//这个格式是为了方便前端显示
+                return new JsonResult(r_json)
+                {
+
+                    StatusCode = 200,
+                };
+            }
+            else
+            { //按月份选择
+                var CustomerProductBillTable = _context.Bills.Join(_context.CustomerProductBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cproductbill) => new { bill, cproductbill })
+           .Join(_context.Customers, bcprb => bcprb.cproductbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
+           .Select(m => new
+           {
+               Date = m.bcprd.bill.Time,
+               BillNo = m.bcprd.bill.BillId,
+               CustomerId = m.customer.CustomerId,
+               CustomerName = m.customer.NameCn,
+               PaymentMethod = m.bcprd.cproductbill.PaymentMethod,
+               AmountSum = m.bcprd.bill.FinalPrice,
+               Comment = m.bcprd.bill.Comment,
+               BillId = m.bcprd.bill.Id,
+               ProductId = m.bcprd.cproductbill.ProductId,
+               StaffId = m.bcprd.cproductbill.StaffId,
+               Time = m.bcprd.bill.Time,//分月份来
+               BigCategory = m.bcprd.cproductbill.BigCategory, //用于对账分类
+           }).Where(j => j.Time.Value.Month == month && j.BigCategory == category).ToList();
+
+                var ProductTable = _context.Products
+                .Join(_context.ProductCategories, product => product.Id, pcategory => pcategory.ProductId, (product, pcategory) => new { product, pcategory })
+                .Join(_context.ProductClasses, pp => pp.pcategory.ClassId, pclass => pclass.Id, (pp, pclass) => new { pp, pclass })
+                .Select(m => new {
+                    ProductName = m.pclass.ProductName,
+                    ProductId = m.pp.product.Id,
+                    BigCategory = m.pclass.Category,
+                }).Where(m => m.BigCategory == category).ToList(); //产品的名字
+
+                var StaffTable = _context.Staffs
+                .Join(_context.Departments, staff => staff.DepartmentId, department => department.Id, (staff, department) => new { staff, department })
+                .Select(m => new
+                {
+                    StaffId = m.staff.Id,
+                    StaffName = m.staff.StaffName,
+                    Department = m.department.DepartmentName,
+                }).ToList();//员工的表
+
+                var CustomerProjectBillTable = _context.Bills.Join(_context.CustomerProjectBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cprojectbill) => new { bill, cprojectbill })
+                .Join(_context.Customers, bcprb => bcprb.cprojectbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
+                .Join(_context.Projects, c => c.bcprd.cprojectbill.ProjectId, product => product.Id, (c, product) => new { c, product })
+                .Select(m => new
+                {
+                    Date = m.c.bcprd.bill.Time,
+                    BillNo = m.c.bcprd.bill.BillId,
+                    CustomerId = m.c.customer.CustomerId,
+                    CustomerName = m.c.customer.NameCn,
+                    PaymentMethod = m.c.bcprd.cprojectbill.PaymentMethod,
+                    AmountSum = m.c.bcprd.bill.FinalPrice,
+                    Comment = m.c.bcprd.bill.Comment,
+                    ProjectName = m.product.ProjectName,
+                    ProductId = m.product.Id,
+                    BillId = m.c.bcprd.bill.Id,
+                    StaffId = m.c.bcprd.cprojectbill.Staffid,
+                    Time = m.c.bcprd.bill.Time,
+                    BigCategory = m.c.bcprd.cprojectbill.BigCategory,
+                }).Where(j => j.Time.Value.Month == month && j.BigCategory == category).ToList();
+
+                var productTableFinal = CustomerProductBillTable.Join(ProductTable, cpbt => cpbt.ProductId, pt => pt.ProductId, (cpbt, pt) => new { cpbt, pt })
+                .Join(StaffTable, cpbtpt => cpbtpt.cpbt.StaffId, staff => staff.StaffId, (cpbtpt, staff) => new { cpbtpt, staff })
+                .Select(m => new AllBillsDto
+                {
+                    Date = m.cpbtpt.cpbt.Date,
+                    BillNo = m.cpbtpt.cpbt.BillNo,
+                    CustomerNo = m.cpbtpt.cpbt.CustomerId,
+                    CustomerName = m.cpbtpt.cpbt.CustomerName,
+                    Name = m.cpbtpt.pt.ProductName,
+                    PaymentMethod = m.cpbtpt.cpbt.PaymentMethod,
+                    AmountSum = m.cpbtpt.cpbt.AmountSum,
+                    Department = m.staff.Department,
+                    Comment = m.cpbtpt.cpbt.Comment,
+                    StaffName = m.staff.StaffName,
+                    BillType = "产品",
+                    BigCategory = m.cpbtpt.cpbt.BigCategory,
+                }).ToList();
+
+                var projectTableFinal = CustomerProjectBillTable
+                .Join(StaffTable, cpbtpt => cpbtpt.StaffId, staff => staff.StaffId, (cpbtpt, staff) => new { cpbtpt, staff })
+                .Select(m => new AllBillsDto
+                {
+                    Date = m.cpbtpt.Date,
+                    BillNo = m.cpbtpt.BillNo,
+                    CustomerNo = m.cpbtpt.CustomerId,
+                    CustomerName = m.cpbtpt.CustomerName,
+                    Name = m.cpbtpt.ProjectName,
+                    PaymentMethod = m.cpbtpt.PaymentMethod,
+                    AmountSum = m.cpbtpt.AmountSum,
+                    Department = m.staff.Department,
+                    Comment = m.cpbtpt.Comment,
+                    StaffName = m.staff.StaffName,
+                    BillType = "项目",
+                    BigCategory = m.cpbtpt.BigCategory,
+                }).ToList();
+
+                productTableFinal.AddRange(projectTableFinal);
+                var r_json = new
+                {
+                    total = productTableFinal.Count(),
+                    totalNotFiltered = productTableFinal.Count(),
+                    rows = productTableFinal
+                };//这个格式是为了方便前端显示
+                return new JsonResult(r_json)
+                {
+                    StatusCode = 200,
+                };
+
+            }
+        }
+
+
+        //获取所有用户购买过的产品的账单
+        //[Authorize(Roles = "Admin")]
+        [HttpGet("CustomerProductBills")]
     public IActionResult GetCustomerProduct()
     {
       var result = _context.Bills.Join(_context.CustomerProductBills,
@@ -302,6 +525,48 @@ namespace CosmosManagementApi.Controllers
         BigCategory = f.ppbcc.ppbc.productbill.cpb.BigCategory,
       }
      ).ToList(); //获取所有用户购买产品的账单
+      var r_json = new
+      {
+        total = result.Count(),
+        totalNotFiltered = result.Count(),
+        rows = result
+      };//这个格式是为了方便前端显示
+
+      return new JsonResult(r_json)
+      {
+        StatusCode = 200,
+      };
+    }
+
+    //获取所有用户购买过的产品的账单
+    //[Authorize(Roles = "Admin")]
+    [HttpGet("CustomerProductBillsByCategory/{category}")]
+    public IActionResult GetCustomerProductByCategory(string category)
+    {
+      var result = _context.Bills.Join(_context.CustomerProductBills,
+      bill => bill.Id, cpb => cpb.BillId, (bill, cpb) => new { bill, cpb })
+      .Join(_context.Products, productbill => productbill.cpb.ProductId, product => product.Id, (productbill, product) => new { productbill, product })
+      .Join(_context.ProductCategories, ppb => ppb.product.Id, category => category.ProductId, (ppbc, category) => new { ppbc, category })
+      .Join(_context.ProductClasses, d => d.category.ClassId, cass => cass.Id, (ppbcc, cass) => new { ppbcc, cass }) //join 两表 获取数据
+      .Join(_context.Staffs, f => f.ppbcc.ppbc.productbill.cpb.StaffId, staff => staff.Id, (f, staff) => 
+      new CustomerProductBillGetDto
+      {
+        BillId = f.ppbcc.ppbc.productbill.bill.BillId,
+        OriPrice = f.ppbcc.ppbc.productbill.bill.OriPrice,
+        Discount = f.ppbcc.ppbc.productbill.bill.Discount,
+        FinalPrice = f.ppbcc.ppbc.productbill.bill.FinalPrice,
+        Time = f.ppbcc.ppbc.productbill.bill.Time,
+        Comment = f.ppbcc.ppbc.productbill.bill.Comment,
+        Number = f.ppbcc.ppbc.productbill.cpb.Number,
+        PaymentMethod = f.ppbcc.ppbc.productbill.cpb.PaymentMethod,
+        CustomerId = f.ppbcc.ppbc.productbill.cpb.CustomerId,
+        StaffId = f.ppbcc.ppbc.productbill.cpb.StaffId,
+        StaffName = staff.StaffName,
+        ProductId = f.ppbcc.ppbc.product.Id,
+        Product = _mapper.Map<ProductClassDto>(f.cass),
+        BigCategory = f.ppbcc.ppbc.productbill.cpb.BigCategory,
+      }
+     ).Where(m => m.BigCategory == category).ToList(); //获取所有用户购买产品的账单 并按category分类
       var r_json = new
       {
         total = result.Count(),
@@ -345,6 +610,49 @@ namespace CosmosManagementApi.Controllers
         BigCategory = f.ppbcc.ppbc.productbill.cpb.BigCategory,
       }
      ).ToList(); //获取所有用户购买产品的账单
+      var r_json = new
+      {
+        total = result.Count(),
+        totalNotFiltered = result.Count(),
+        rows = result
+      };//这个格式是为了方便前端显示
+
+      return new JsonResult(r_json)
+      {
+        StatusCode = 200,
+      };
+    }
+
+     //获取单个用户购买过的产品的账单并分类
+    //[Authorize(Roles = "O1Staff, Admin")]
+    [HttpGet("CustomerProductBillsByIdAndCategory/{id}/{category}")]
+    public IActionResult GetACustomerProductsByIdAndCategory(int id, string category)
+    {
+      var result = _context.Bills.Join(_context.CustomerProductBills,
+      bill => bill.Id, cpb => cpb.BillId, (bill, cpb) => new { bill, cpb })
+      .Where(gg => gg.cpb.CustomerId == id)
+      .Join(_context.Products, productbill => productbill.cpb.ProductId, product => product.Id, (productbill, product) => new { productbill, product })
+      .Join(_context.ProductCategories, ppb => ppb.product.Id, category => category.ProductId, (ppbc, category) => new { ppbc, category })
+      .Join(_context.ProductClasses, d => d.category.ClassId, cass => cass.Id, (ppbcc, cass) => new { ppbcc, cass }) //join 两表 获取数据
+      .Join(_context.Staffs, f => f.ppbcc.ppbc.productbill.cpb.StaffId, staff => staff.Id, (f, staff) =>
+      new CustomerProductBillGetDto
+      {
+        BillId = f.ppbcc.ppbc.productbill.bill.BillId,
+        OriPrice = f.ppbcc.ppbc.productbill.bill.OriPrice,
+        Discount = f.ppbcc.ppbc.productbill.bill.Discount,
+        FinalPrice = f.ppbcc.ppbc.productbill.bill.FinalPrice,
+        Time = f.ppbcc.ppbc.productbill.bill.Time,
+        Comment = f.ppbcc.ppbc.productbill.bill.Comment,
+        Number = f.ppbcc.ppbc.productbill.cpb.Number,
+        PaymentMethod = f.ppbcc.ppbc.productbill.cpb.PaymentMethod,
+        CustomerId = f.ppbcc.ppbc.productbill.cpb.CustomerId,
+        StaffId = f.ppbcc.ppbc.productbill.cpb.StaffId,
+        StaffName = staff.StaffName,
+        ProductId = f.ppbcc.ppbc.product.Id,
+        Product = _mapper.Map<ProductClassDto>(f.cass),
+        BigCategory = f.ppbcc.ppbc.productbill.cpb.BigCategory,
+      }
+     ).Where(m => m.BigCategory == category).ToList(); //获取所有用户购买产品的账单
       var r_json = new
       {
         total = result.Count(),
@@ -402,6 +710,50 @@ namespace CosmosManagementApi.Controllers
       };
     }
 
+    //获取所有用户购买过的项目的账单并分类
+    //[Authorize(Roles = "Admin")]
+    [HttpGet("CustomerProjectBillsByCategory/{category}")]
+    public IActionResult GetCustomerProjectByCategory(string category)
+    {
+      var result = _context.Bills.Join(_context.CustomerProjectBills,
+      bill => bill.Id, cpb => cpb.BillId, (bill, cpb) => new { bill, cpb })
+      .Join(_context.Projects, c => c.cpb.ProjectId, project => project.Id, (c, project) => new{c, project})
+      .Join(_context.Staffs, f => f.c.cpb.Staffid, staff => staff.Id, (f, staff) => //join 两表 获取数据
+      new CustomerProjectBillGetDto
+      {
+        BillId = f.c.bill.BillId,
+        OriPrice = f.c.bill.OriPrice,
+        Discount = f.c.bill.Discount,
+        FinalPrice = f.c.bill.FinalPrice,
+        Time = f.c.bill.Time,
+        Comment = f.c.bill.Comment,
+        ProjectName = f.project.ProjectName,
+        ProjectNumber = f.c.cpb.ProjectNumber,
+        PaymentMethod = f.c.cpb.PaymentMethod,
+        CustomerId = f.c.cpb.CustomerId,
+        StaffId = f.c.cpb.Staffid,
+        StaffName = staff.StaffName,
+
+        ProjectId = f.project.Id,
+        
+        Project = f.project,
+
+        BigCategory = f.c.cpb.BigCategory,
+      }
+     ).Where(m => m.BigCategory == category).ToList(); //获取所有用户购买产品的账单并分类
+      var r_json = new
+      {
+        total = result.Count(),
+        totalNotFiltered = result.Count(),
+        rows = result
+      };//这个格式是为了方便前端显示
+
+      return new JsonResult(r_json)
+      {
+        StatusCode = 200,
+      };
+    }
+
     //获取单个用户购买过的项目的账单
     [HttpGet("CustomerProjectBills/{id}")]
     //[Authorize(Roles = "O1Staff, Admin")]
@@ -435,6 +787,54 @@ namespace CosmosManagementApi.Controllers
         BigCategory = f.c.cpb.BigCategory,
       }
      ).ToList(); //获取所有用户购买产品的账单
+      var r_json = new
+      {
+        total = result.Count(),
+        totalNotFiltered = result.Count(),
+        rows = result
+      };//这个格式是为了方便前端显示
+
+      JsonResult jsR = new JsonResult(r_json)
+      {
+        StatusCode = 200,
+      };
+
+      return jsR;
+    }
+
+    //获取单个用户购买过的项目的账单并分类
+    [HttpGet("CustomerProjectBillsByIdAndCategory/{id}/{category}")]
+    //[Authorize(Roles = "O1Staff, Admin")]
+    public IActionResult GetACustomerProjectsByIdAndCategory(int id, string category)
+    {
+      var result = _context.Bills.Join(_context.CustomerProjectBills,
+      bill => bill.Id, cpb => cpb.BillId, (bill, cpb) => new { bill, cpb })
+      .Where(gg => gg.cpb.CustomerId == id)
+      .Join(_context.Projects, c => c.cpb.ProjectId, project => project.Id, (c, project) => new { c, project })
+      .Join(_context.Staffs, f => f.c.cpb.Staffid, staff => staff.Id, (f, staff) => //join 两表 获取数据
+      new CustomerProjectBillGetDto
+      {
+        BillId = f.c.bill.BillId,
+        OriPrice = f.c.bill.OriPrice,
+        Discount = f.c.bill.Discount,
+        FinalPrice = f.c.bill.FinalPrice,
+        Time = f.c.bill.Time,
+        Comment = f.c.bill.Comment,
+        ProjectName = f.project.ProjectName,
+        ProjectNumber = f.c.cpb.ProjectNumber,
+        PaymentMethod = f.c.cpb.PaymentMethod,
+        CustomerId = f.c.cpb.CustomerId,
+        StaffId = f.c.cpb.Staffid,
+        StaffName = staff.StaffName,
+
+        ProjectId = f.project.Id,
+        CommentOfProjectLine = f.c.cpb.Comment,
+
+        Project = f.project,
+
+        BigCategory = f.c.cpb.BigCategory,
+      }
+     ).Where(m => m.BigCategory == category).ToList(); //获取所有用户购买产品的账单
       var r_json = new
       {
         total = result.Count(),
@@ -506,7 +906,7 @@ namespace CosmosManagementApi.Controllers
             pId = m.product.Id,
             ProductId = m.c.productClass.ProductId,
             ProductClassId = m.c.productClass.Id,
-            BigCategory = m.c.productClass.BigCategory,
+            BigCategory = m.c.productClass.Category,
           }).ToList(); //获取产品信息 获取product表中的信息
 
         //三方面检查
@@ -749,7 +1149,7 @@ namespace CosmosManagementApi.Controllers
         pId = m.product.Id,
         ProductId = m.c.productClass.ProductId,
         ProductClassId = m.c.productClass.Id,
-        BigCategory = m.c.productClass.BigCategory,
+        BigCategory = m.c.productClass.Category,
       }).ToList(); //获取产品信息 获取product表中的信息
 
       //创建List用于接受invoices
@@ -824,7 +1224,7 @@ namespace CosmosManagementApi.Controllers
             Staff = staff.StaffName,
             StaffNumber = staff.StaffId,
             PaymentMethods = cpb.PaymentMethod,
-            BigCategory = productClass.BigCategory,
+            BigCategory = productClass.Category,
           });
       }
       cprd.InvoiceNo = BillNumberInit;

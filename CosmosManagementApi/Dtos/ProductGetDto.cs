@@ -25,6 +25,7 @@ namespace CosmosManagementApi.Dtos
     public int? IfSelled { get; set; }
 
     public int? CategoryId { get; set; }
+    public string? BigCategory { get; set; }
 
   }
 }
