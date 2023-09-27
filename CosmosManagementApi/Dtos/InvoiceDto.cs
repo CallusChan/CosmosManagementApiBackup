@@ -11,5 +11,6 @@ namespace CosmosManagementApi.Dtos
     public string? Staff  { get; set; }
     public string? StaffNumber{ get; set; }
     public string? PaymentMethods{ get; set; }
+    public string? BigCategory { get; set; }
   }
 }

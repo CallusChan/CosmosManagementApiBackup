@@ -323,13 +323,13 @@ public partial class CosmosManagementDbContext : DbContext
             entity.HasIndex(e => new { e.CustomerId, e.ProjectId, e.BillId }, "UQ__Customer__3FFFD2383B292408").IsUnique();
 
             entity.Property(e => e.Id).HasComment("Primary key");
+            entity.Property(e => e.BigCategory)
+                .HasMaxLength(255)
+                .HasComment("The biggest category")
+                .HasColumnName("Big_category");
             entity.Property(e => e.BillId)
                 .HasComment("Bill id")
                 .HasColumnName("Bill_id");
-            entity.Property(e => e.BitCategory)
-                .HasMaxLength(255)
-                .HasComment("The biggest category")
-                .HasColumnName("Bit_category");
             entity.Property(e => e.Category)
                 .HasMaxLength(255)
                 .HasComment("which category this bill belongs to");
@@ -461,6 +461,10 @@ public partial class CosmosManagementDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Product__3214EC07F6C21D94_copy1");
 
             entity.Property(e => e.Id).HasComment("Primary key for product");
+            entity.Property(e => e.BigCategory)
+                .HasMaxLength(255)
+                .HasComment("Used for Bills")
+                .HasColumnName("Big_category");
             entity.Property(e => e.BuyingPrice)
                 .HasMaxLength(75)
                 .HasComment("Buying price of product")

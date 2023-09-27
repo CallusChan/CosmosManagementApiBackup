@@ -35,7 +35,7 @@ namespace CosmosManagementApi.Controllers
 
     // GET: api/<BillController>
     //获取所有Bill表单
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [HttpGet]
     public IActionResult Get()
     {
@@ -55,7 +55,7 @@ namespace CosmosManagementApi.Controllers
 
     // GET api/<ProductController>/5
     //获取一个月内的bill表单
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [HttpGet("AllBills/{month}")]
     public IActionResult GetAllBills(int month)
     {
@@ -75,6 +75,7 @@ namespace CosmosManagementApi.Controllers
         ProductId = m.bcprd.cproductbill.ProductId,
         StaffId = m.bcprd.cproductbill.StaffId,
         Time = m.bcprd.bill.Time,//分月份来
+        BigCategory = m.bcprd.cproductbill.BigCategory, //用于对账分类
       }).ToList();
 
       var ProductTable = _context.Products
@@ -83,6 +84,8 @@ namespace CosmosManagementApi.Controllers
       .Select( m => new{
         ProductName = m.pclass.ProductName,
         ProductId = m.pp.product.Id,
+        Category = m.pclass.Category,
+        BigCategory = m.pclass.BigCategory,
       }).ToList(); //产品的名字
 
       var StaffTable = _context.Staffs
@@ -94,23 +97,24 @@ namespace CosmosManagementApi.Controllers
         Department = m.department.DepartmentName,
       }).ToList();//员工的表
 
-            var CustomerProjectBillTable = _context.Bills.Join(_context.CustomerProjectBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cproductbill) => new { bill, cproductbill })
-      .Join(_context.Customers, bcprb => bcprb.cproductbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
-      .Join(_context.Projects, c => c.bcprd.cproductbill.ProjectId, product => product.Id, (c, product) => new { c, product })
+      var CustomerProjectBillTable = _context.Bills.Join(_context.CustomerProjectBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cprojectbill) => new { bill, cprojectbill })
+      .Join(_context.Customers, bcprb => bcprb.cprojectbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
+      .Join(_context.Projects, c => c.bcprd.cprojectbill.ProjectId, product => product.Id, (c, product) => new { c, product })
       .Select(m => new
       {
           Date = m.c.bcprd.bill.Time,
           BillNo = m.c.bcprd.bill.BillId,
           CustomerId = m.c.customer.CustomerId,
           CustomerName = m.c.customer.NameCn,
-          PaymentMethod = m.c.bcprd.cproductbill.PaymentMethod,
+          PaymentMethod = m.c.bcprd.cprojectbill.PaymentMethod,
           AmountSum = m.c.bcprd.bill.FinalPrice,
           Comment = m.c.bcprd.bill.Comment,
           ProjectName = m.product.ProjectName,
           ProductId = m.product.Id,
           BillId = m.c.bcprd.bill.Id,
-          StaffId = m.c.bcprd.cproductbill.Staffid,
+          StaffId = m.c.bcprd.cprojectbill.Staffid,
           Time = m.c.bcprd.bill.Time,
+          BigCategory = m.c.bcprd.cprojectbill.BigCategory,
       }).ToList();
 
       var productTableFinal = CustomerProductBillTable.Join(ProductTable, cpbt => cpbt.ProductId, pt => pt.ProductId, (cpbt, pt)=> new{cpbt, pt})
@@ -127,7 +131,8 @@ namespace CosmosManagementApi.Controllers
           Department = m.staff.Department,
           Comment = m.cpbtpt.cpbt.Comment,
           StaffName = m.staff.StaffName,
-          BillType = "产品"
+          BillType = "产品",
+          BigCategory = m.cpbtpt.cpbt.BigCategory,
       }).ToList();
 
       var projectTableFinal = CustomerProjectBillTable
@@ -144,7 +149,8 @@ namespace CosmosManagementApi.Controllers
           Department = m.staff.Department,
           Comment = m.cpbtpt.Comment,
           StaffName = m.staff.StaffName,
-          BillType = "项目"
+          BillType = "项目",
+          BigCategory = m.cpbtpt.BigCategory,
       }).ToList();
 
       productTableFinal.AddRange(projectTableFinal);
@@ -175,6 +181,7 @@ namespace CosmosManagementApi.Controllers
         ProductId = m.bcprd.cproductbill.ProductId,
         StaffId = m.bcprd.cproductbill.StaffId,
         Time = m.bcprd.bill.Time,//分月份来
+        BigCategory = m.bcprd.cproductbill.BigCategory, //用于对账分类
       }).Where(j => j.Time.Value.Month == month).ToList();
 
       var ProductTable = _context.Products
@@ -183,6 +190,7 @@ namespace CosmosManagementApi.Controllers
       .Select( m => new{
         ProductName = m.pclass.ProductName,
         ProductId = m.pp.product.Id,
+        BigCategory = m.pclass.BigCategory,
       }).ToList(); //产品的名字
 
       var StaffTable = _context.Staffs
@@ -194,23 +202,24 @@ namespace CosmosManagementApi.Controllers
         Department = m.department.DepartmentName,
       }).ToList();//员工的表
 
-            var CustomerProjectBillTable = _context.Bills.Join(_context.CustomerProjectBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cproductbill) => new { bill, cproductbill })
-      .Join(_context.Customers, bcprb => bcprb.cproductbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
-      .Join(_context.Projects, c => c.bcprd.cproductbill.ProjectId, product => product.Id, (c, product) => new { c, product })
+      var CustomerProjectBillTable = _context.Bills.Join(_context.CustomerProjectBills, bill => bill.Id, cprodutbill => cprodutbill.BillId, (bill, cprojectbill) => new { bill, cprojectbill })
+      .Join(_context.Customers, bcprb => bcprb.cprojectbill.CustomerId, customer => customer.Id, (bcprd, customer) => new { bcprd, customer })
+      .Join(_context.Projects, c => c.bcprd.cprojectbill.ProjectId, product => product.Id, (c, product) => new { c, product })
       .Select(m => new
       {
           Date = m.c.bcprd.bill.Time,
           BillNo = m.c.bcprd.bill.BillId,
           CustomerId = m.c.customer.CustomerId,
           CustomerName = m.c.customer.NameCn,
-          PaymentMethod = m.c.bcprd.cproductbill.PaymentMethod,
+          PaymentMethod = m.c.bcprd.cprojectbill.PaymentMethod,
           AmountSum = m.c.bcprd.bill.FinalPrice,
           Comment = m.c.bcprd.bill.Comment,
           ProjectName = m.product.ProjectName,
           ProductId = m.product.Id,
           BillId = m.c.bcprd.bill.Id,
-          StaffId = m.c.bcprd.cproductbill.Staffid,
+          StaffId = m.c.bcprd.cprojectbill.Staffid,
           Time = m.c.bcprd.bill.Time,
+          BigCategory = m.c.bcprd.cprojectbill.BigCategory,
       }).Where(j => j.Time.Value.Month == month).ToList();
 
       var productTableFinal = CustomerProductBillTable.Join(ProductTable, cpbt => cpbt.ProductId, pt => pt.ProductId, (cpbt, pt)=> new{cpbt, pt})
@@ -227,7 +236,8 @@ namespace CosmosManagementApi.Controllers
           Department = m.staff.Department,
           Comment = m.cpbtpt.cpbt.Comment,
           StaffName = m.staff.StaffName,
-          BillType = "产品"
+          BillType = "产品",
+          BigCategory = m.cpbtpt.cpbt.BigCategory,
       }).ToList();
 
       var projectTableFinal = CustomerProjectBillTable
@@ -244,7 +254,8 @@ namespace CosmosManagementApi.Controllers
           Department = m.staff.Department,
           Comment = m.cpbtpt.Comment,
           StaffName = m.staff.StaffName,
-          BillType = "项目"
+          BillType = "项目",
+          BigCategory = m.cpbtpt.BigCategory,
       }).ToList();
 
       productTableFinal.AddRange(projectTableFinal);
@@ -263,7 +274,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取所有用户购买过的产品的账单
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [HttpGet("CustomerProductBills")]
     public IActionResult GetCustomerProduct()
     {
@@ -287,7 +298,8 @@ namespace CosmosManagementApi.Controllers
         StaffId = f.ppbcc.ppbc.productbill.cpb.StaffId,
         StaffName = staff.StaffName,
         ProductId = f.ppbcc.ppbc.product.Id,
-        Product = _mapper.Map<ProductClassDto>(f.cass)
+        Product = _mapper.Map<ProductClassDto>(f.cass),
+        BigCategory = f.ppbcc.ppbc.productbill.cpb.BigCategory,
       }
      ).ToList(); //获取所有用户购买产品的账单
       var r_json = new
@@ -304,7 +316,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取单个用户购买过的产品的账单
-    [Authorize(Roles = "O1Staff, Admin")]
+    //[Authorize(Roles = "O1Staff, Admin")]
     [HttpGet("CustomerProductBills/{id}")]
     public IActionResult GetACustomerProducts(int id)
     {
@@ -329,7 +341,8 @@ namespace CosmosManagementApi.Controllers
         StaffId = f.ppbcc.ppbc.productbill.cpb.StaffId,
         StaffName = staff.StaffName,
         ProductId = f.ppbcc.ppbc.product.Id,
-        Product = _mapper.Map<ProductClassDto>(f.cass)
+        Product = _mapper.Map<ProductClassDto>(f.cass),
+        BigCategory = f.ppbcc.ppbc.productbill.cpb.BigCategory,
       }
      ).ToList(); //获取所有用户购买产品的账单
       var r_json = new
@@ -346,7 +359,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取所有用户购买过的项目的账单
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [HttpGet("CustomerProjectBills")]
     public IActionResult GetCustomerProject()
     {
@@ -371,7 +384,9 @@ namespace CosmosManagementApi.Controllers
 
         ProjectId = f.project.Id,
         
-        Project = f.project
+        Project = f.project,
+
+        BigCategory = f.c.cpb.BigCategory,
       }
      ).ToList(); //获取所有用户购买产品的账单
       var r_json = new
@@ -389,7 +404,7 @@ namespace CosmosManagementApi.Controllers
 
     //获取单个用户购买过的项目的账单
     [HttpGet("CustomerProjectBills/{id}")]
-    [Authorize(Roles = "O1Staff, Admin")]
+    //[Authorize(Roles = "O1Staff, Admin")]
     public IActionResult GetACustomerProjects(int id)
     {
       var result = _context.Bills.Join(_context.CustomerProjectBills,
@@ -415,7 +430,9 @@ namespace CosmosManagementApi.Controllers
         ProjectId = f.project.Id,
         CommentOfProjectLine = f.c.cpb.Comment,
 
-        Project = f.project
+        Project = f.project,
+
+        BigCategory = f.c.cpb.BigCategory,
       }
      ).ToList(); //获取所有用户购买产品的账单
       var r_json = new
@@ -435,7 +452,7 @@ namespace CosmosManagementApi.Controllers
 
     //用于传输用户同时购买产品和项目开单
     //POST api/<ProductController>
-    //[Authorize(Roles = "O1Staff, Admin")]
+    ////[Authorize(Roles = "O1Staff, Admin")]
     [HttpPost("CustomerBills")]
     public IActionResult PostCustomerBills([FromBody] CustomerBillsPostDto Bills)
     {
@@ -489,6 +506,7 @@ namespace CosmosManagementApi.Controllers
             pId = m.product.Id,
             ProductId = m.c.productClass.ProductId,
             ProductClassId = m.c.productClass.Id,
+            BigCategory = m.c.productClass.BigCategory,
           }).ToList(); //获取产品信息 获取product表中的信息
 
         //三方面检查
@@ -640,7 +658,7 @@ namespace CosmosManagementApi.Controllers
 
     // PUT api/<ProductController>/5
     //修改表单备注
-    [Authorize(Roles = "O1Staff, Admin")]
+    //[Authorize(Roles = "O1Staff, Admin")]
     [HttpPut("EditComment/{id}")]
     public IActionResult Put(int id, [FromBody] string value)
     {
@@ -661,7 +679,7 @@ namespace CosmosManagementApi.Controllers
 
     //修改project comment
     [HttpPut("EditProjectComment")]
-    [Authorize(Roles = "O1Staff, Admin")]
+    //[Authorize(Roles = "O1Staff, Admin")]
     public IActionResult EditProjectComment([FromBody] CommentEditDto value) 
     {
       if(value == null){
@@ -681,7 +699,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     // DELETE api/<ProductController>/5
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
@@ -731,6 +749,7 @@ namespace CosmosManagementApi.Controllers
         pId = m.product.Id,
         ProductId = m.c.productClass.ProductId,
         ProductClassId = m.c.productClass.Id,
+        BigCategory = m.c.productClass.BigCategory,
       }).ToList(); //获取产品信息 获取product表中的信息
 
       //创建List用于接受invoices
@@ -783,6 +802,7 @@ namespace CosmosManagementApi.Controllers
           //cpb.PaymentMethod = JsonSerializer.Serialize(a.PaymentMethods, new JsonSerializerOptions() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
 
           cpb.StaffId = a.StaffId;
+          cpb.BigCategory = productTable.Where(m => m.ProductClassId == a.ProductId).FirstOrDefault().BigCategory; //选中BigCategory
 
           _context.CustomerProductBills.Add(cpb);
           //_context.SaveChanges(); //保存 CustomerProductBill信息，完成任务，请考虑异步 同步
@@ -804,6 +824,7 @@ namespace CosmosManagementApi.Controllers
             Staff = staff.StaffName,
             StaffNumber = staff.StaffId,
             PaymentMethods = cpb.PaymentMethod,
+            BigCategory = productClass.BigCategory,
           });
       }
       cprd.InvoiceNo = BillNumberInit;
@@ -863,6 +884,7 @@ namespace CosmosManagementApi.Controllers
           CPB.UnitPrice = a.UnitPrice;
           CPB.NetPrice = a.NetPrice;
           CPB.Discount = a.Discount;
+          CPB.BigCategory = _context.Projects.Where(m => m.Id == a.ProjectId).FirstOrDefault().BigCategory;
           _context.CustomerProjectBills.Add(CPB);
          // _context.SaveChanges(); // 注入CustomerProjectBill 数据， 储存 获得其主键id
           customer = _context.Customers.Find(a.CustomerId);
@@ -914,6 +936,7 @@ namespace CosmosManagementApi.Controllers
             Staff = staff.StaffName,
             StaffNumber = staff.StaffId,
             PaymentMethods = CPB.PaymentMethod,
+            BigCategory = CPB.BigCategory,
           });
         
 

@@ -32,6 +32,8 @@ namespace CosmosManagementApi.Dtos
 
     public string? CommentOfProjectLine { get; set; }
 
+    public string? BigCategory { get; set; }
+
     public Project? Project { get; set; }
   }
 }

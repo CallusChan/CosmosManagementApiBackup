@@ -13,6 +13,7 @@
         public string? Comment { get; set; }
         public string? StaffName{ get; set; }
         public string? BillType{ get; set; }
+        public string? BigCategory{ get; set; }
 
     }
 }

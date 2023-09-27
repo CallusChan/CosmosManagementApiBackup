@@ -55,5 +55,10 @@ public partial class ProductClass
     /// </summary>
     public int? Storage { get; set; }
 
+    /// <summary>
+    /// Used for Bills
+    /// </summary>
+    public string? BigCategory { get; set; }
+
     public virtual ICollection<ProductCategory> ProductCategories { get; } = new List<ProductCategory>();
 }

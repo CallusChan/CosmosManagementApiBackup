@@ -68,7 +68,7 @@ public partial class CustomerProjectBill
     /// <summary>
     /// The biggest category
     /// </summary>
-    public string? BitCategory { get; set; }
+    public string? BigCategory { get; set; }
 
     public virtual Bill Bill { get; set; } = null!;
 

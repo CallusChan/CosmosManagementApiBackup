@@ -55,6 +55,8 @@ namespace CosmosManagementApi.Dtos
     /// </summary>
     public string? PaymentMethod { get; set; }
 
+    public string? BigCategory { get; set; }
+
     /// <summary>
     /// Staff who made this purchase
     /// </summary>
