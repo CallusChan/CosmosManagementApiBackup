@@ -35,7 +35,7 @@ namespace CosmosManagementApi.Controllers
 
     // GET: api/<BillController>
     //获取所有Bill表单
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public IActionResult Get()
     {
@@ -55,7 +55,7 @@ namespace CosmosManagementApi.Controllers
 
     // GET api/<ProductController>/5
     //获取一个月内的bill表单
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet("AllBills/{month}")]
     public IActionResult GetAllBills(int month)
     {
@@ -274,7 +274,7 @@ namespace CosmosManagementApi.Controllers
     }
 
         //获取一个月内的bill表单 by category
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("AllBills/{month}/{category}")]
         public IActionResult GetAllBillsByCategory(int month, string category)
         {
@@ -497,7 +497,7 @@ namespace CosmosManagementApi.Controllers
 
 
         //获取所有用户购买过的产品的账单
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("CustomerProductBills")]
     public IActionResult GetCustomerProduct()
     {
@@ -539,7 +539,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取所有用户购买过的产品的账单
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet("CustomerProductBillsByCategory/{category}")]
     public IActionResult GetCustomerProductByCategory(string category)
     {
@@ -581,7 +581,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取单个用户购买过的产品的账单
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     [HttpGet("CustomerProductBills/{id}")]
     public IActionResult GetACustomerProducts(int id)
     {
@@ -624,7 +624,7 @@ namespace CosmosManagementApi.Controllers
     }
 
      //获取单个用户购买过的产品的账单并分类
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     [HttpGet("CustomerProductBillsByIdAndCategory/{id}/{category}")]
     public IActionResult GetACustomerProductsByIdAndCategory(int id, string category)
     {
@@ -667,7 +667,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取所有用户购买过的项目的账单
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet("CustomerProjectBills")]
     public IActionResult GetCustomerProject()
     {
@@ -711,7 +711,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取所有用户购买过的项目的账单并分类
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet("CustomerProjectBillsByCategory/{category}")]
     public IActionResult GetCustomerProjectByCategory(string category)
     {
@@ -756,7 +756,7 @@ namespace CosmosManagementApi.Controllers
 
     //获取单个用户购买过的项目的账单
     [HttpGet("CustomerProjectBills/{id}")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     public IActionResult GetACustomerProjects(int id)
     {
       var result = _context.Bills.Join(_context.CustomerProjectBills,
@@ -804,7 +804,7 @@ namespace CosmosManagementApi.Controllers
 
     //获取单个用户购买过的项目的账单并分类
     [HttpGet("CustomerProjectBillsByIdAndCategory/{id}/{category}")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     public IActionResult GetACustomerProjectsByIdAndCategory(int id, string category)
     {
       var result = _context.Bills.Join(_context.CustomerProjectBills,
@@ -852,7 +852,7 @@ namespace CosmosManagementApi.Controllers
 
     //用于传输用户同时购买产品和项目开单
     //POST api/<ProductController>
-    ////[Authorize(Roles = "O1Staff, Admin")]
+    //[Authorize(Roles = "O1Staff, Admin")]
     [HttpPost("CustomerBills")]
     public IActionResult PostCustomerBills([FromBody] CustomerBillsPostDto Bills)
     {
@@ -1058,7 +1058,7 @@ namespace CosmosManagementApi.Controllers
 
     // PUT api/<ProductController>/5
     //修改表单备注
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     [HttpPut("EditComment/{id}")]
     public IActionResult Put(int id, [FromBody] string value)
     {
@@ -1079,7 +1079,7 @@ namespace CosmosManagementApi.Controllers
 
     //修改project comment
     [HttpPut("EditProjectComment")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     public IActionResult EditProjectComment([FromBody] CommentEditDto value) 
     {
       if(value == null){
@@ -1099,7 +1099,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     // DELETE api/<ProductController>/5
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {

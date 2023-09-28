@@ -33,7 +33,7 @@ namespace CosmosManagementApi.Controllers
     // GET: api/<ProductController>
     //获取所有项目信息
     [HttpGet]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     public IActionResult Get()
     {
       var result = _context.Projects.Where(p => p.IsDeleted == 0).ToList();
@@ -53,7 +53,7 @@ namespace CosmosManagementApi.Controllers
     // GET api/<ProjectController>/5
     //获取单个项目信息
     [HttpGet("{id}")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
 
     public IActionResult Get(int id)
     {
@@ -81,7 +81,7 @@ namespace CosmosManagementApi.Controllers
 
     //获取用户项目记录
     [HttpGet("CustomerProjectRecords/{id}")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
 
     public IActionResult GetCustomerPR(int id) 
     {
@@ -112,7 +112,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取单个用户产品项目剩余次数
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     [HttpGet("GetCustomerProjectNumber/{id}")]
     public IActionResult GetCustomerProjectNumber(int id)
     {
@@ -147,7 +147,7 @@ namespace CosmosManagementApi.Controllers
 
 
     //获取项目种类
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     [HttpGet("GetCategories")]
     public IActionResult GetCategories()
     {
@@ -157,7 +157,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //获取充值後客⼈的消費選項
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     [HttpGet("GetBigCategories")]
     public IActionResult GetPurchaseCategories()
     {
@@ -167,7 +167,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //传输新增项目种类
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpPost("AddCategories")]
     public IActionResult PostCategories([FromBody] ProjectCategoriesPostDto value)
     {
@@ -186,7 +186,7 @@ namespace CosmosManagementApi.Controllers
     }
 
     //传输新增充值後客⼈的消費選項
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpPost("AddBigCategories")]
     public IActionResult PostPurchaseCategories([FromBody] PurchaseCategoriesPostDto value)
     {
@@ -208,7 +208,7 @@ namespace CosmosManagementApi.Controllers
     // POST api/<ProductController>
     // 新增项目
     [HttpPost]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Post([FromBody] ProjectAddDto value)
     {
       if(value == null){
@@ -227,7 +227,7 @@ namespace CosmosManagementApi.Controllers
     //核销
     // POST api/<ProjectController>
     [HttpPost("WriteOff")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     public IActionResult PostVerification([FromBody] WriteOffDto value)
     {
       if (value == null)
@@ -296,7 +296,7 @@ namespace CosmosManagementApi.Controllers
 
     //核销上传签名
     // POST api/<ProjectController>
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     [HttpPost("Signature/{id}")]
     public IActionResult PostSignature([FromBody] string base64,int id)
     {
@@ -330,7 +330,7 @@ namespace CosmosManagementApi.Controllers
 
     // PUT api/<ProductController>/5
     //修改项目信息
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public IActionResult Put(int id, [FromBody] ProjectUpdateDto value)
     {
@@ -362,7 +362,7 @@ namespace CosmosManagementApi.Controllers
     // DELETE api/<ProjectController>/5
     //删除项目信息
     [HttpDelete("{id}")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
       var delete = _context.Projects.Find(id);

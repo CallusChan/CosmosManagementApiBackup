@@ -86,7 +86,7 @@ namespace CosmosManagementApi.Controllers
     // GET api/<ValuesController>/5
     //获取单个staff的信息
     [HttpGet("{id}")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     public IActionResult Get(int id)
     {
       var result = _context.Staffs.Find(id);

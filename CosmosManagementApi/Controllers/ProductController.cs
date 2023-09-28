@@ -105,7 +105,7 @@ namespace CosmosManagementApi.Controllers
     //返还产品种类下所有产品
     // GET: api/GetProdutsInClass<ProductController>
     [HttpGet("GetProdutsInClass")]
-    //[Authorize(Roles = "O1Staff, Admin")]
+    [Authorize(Roles = "O1Staff, Admin")]
     public IActionResult GetProdutsInClass(int classId)
     {
       var result = _context.Products.Join(_context.ProductCategories, a => a.Id, b => b.ProductId, (a, b) => //join 两表 获取数据
@@ -133,7 +133,7 @@ namespace CosmosManagementApi.Controllers
         //返还大种类下所有产品
         // GET: api/GetProdutsInClass<ProductController>
         [HttpGet("GetProdutsInCategory")]
-        //[Authorize(Roles = "O1Staff, Admin")]
+        [Authorize(Roles = "O1Staff, Admin")]
         public IActionResult GetProdutsInCategory(string categorySearch)
         {
             var result = _context.Products.Join(_context.ProductCategories, a => a.Id, b => b.ProductId, (a, b) => new { a, b })
