@@ -63,6 +63,8 @@ namespace CosmosManagementApi.Dtos
     /// if staff is still on board
     /// </summary>
     public int? IfOnboard { get; set; }
+    public int? Level { get; set; } 
+    public string? Password { get; set; }
 
     /// <summary>
     /// reference key to departments

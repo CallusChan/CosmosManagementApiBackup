@@ -45,7 +45,25 @@ namespace CosmosManagementApi.Controllers
     [HttpGet]
     public IActionResult Get()
     { 
-      var result = _context.Staffs.ToList();
+      var result = _context.Staffs.Join(_context.StaffAccounts, staff => staff.Id, staffAccount => staffAccount.StaffId, (staff, staffAccount) => new { staff, staffAccount})
+      .Select(m => new StaffGetDto{
+        Id = m.staff.Id,
+        StaffId = m.staff.StaffId,
+        StaffName = m.staff.StaffName,
+        StaffNameEn = m.staff.StaffNameEn,
+        IdCard = m.staff.IdCard,
+        Gender = m.staff.Gender,
+        Phone = m.staff.Phone,
+        Email = m.staff.Email,
+        Location = m.staff.Location,
+        Birthday = m.staff.Birthday,
+        OnboardDate = m.staff.OnboardDate,
+        Level = m.staffAccount.Level,
+        Password = m.staffAccount.Pwd,
+        DepartmentId = m.staff.DepartmentId,
+        PositionId = m.staff.PositionId,
+      })
+      .ToList();
       var map = _mapper.Map<IEnumerable<StaffGetDto>>(result);
       var r_json = new
       {
@@ -68,7 +86,7 @@ namespace CosmosManagementApi.Controllers
     // GET api/<ValuesController>/5
     //获取单个staff的信息
     [HttpGet("{id}")]
-    [Authorize(Roles = "O1Staff, Admin")]
+    //[Authorize(Roles = "O1Staff, Admin")]
     public IActionResult Get(int id)
     {
       var result = _context.Staffs.Find(id);
@@ -76,6 +94,9 @@ namespace CosmosManagementApi.Controllers
         return NotFound();
       }
       var map = _mapper.Map<StaffGetDto>(result);
+      var account = _context.StaffAccounts.Where(m => m.StaffId == id).FirstOrDefault();
+      map.Level = account.Level;
+      map.Password = account.Pwd;
       return Ok(map);
     }
 
