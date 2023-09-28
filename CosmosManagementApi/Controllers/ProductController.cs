@@ -133,7 +133,7 @@ namespace CosmosManagementApi.Controllers
         //返还大种类下所有产品
         // GET: api/GetProdutsInClass<ProductController>
         [HttpGet("GetProdutsInCategory")]
-        [Authorize(Roles = "O1Staff, Admin")]
+        //[Authorize(Roles = "O1Staff, Admin")]
         public IActionResult GetProdutsInCategory(string categorySearch)
         {
             var result = _context.Products.Join(_context.ProductCategories, a => a.Id, b => b.ProductId, (a, b) => new { a, b })
@@ -145,8 +145,9 @@ namespace CosmosManagementApi.Controllers
                 IfSelled = m.ab.a.IfSelled,
                 CategoryId = m.ab.b.ClassId,
                 BigCategory = m.c.BigCategory,
+                Category = m.c.Category,
             })//join 三表 获取数据
-            .Where(o => o.BigCategory == categorySearch && o.IfSelled == 0).ToList(); //判断条件 选择相应class
+            .Where(o => o.Category == categorySearch && o.IfSelled == 0).ToList(); //判断条件 选择相应class
 
             var r_json = new
             {
@@ -198,6 +199,9 @@ namespace CosmosManagementApi.Controllers
       {
         value.Storage = 0; //如果用户传来的产品数为null 则改为0
       }
+      if(value.BigCategory == null) {
+        value.BigCategory = value.Category; // 如为空 则赋值category
+      }
       var map = _mapper.Map<ProductClass>(value); //先增加产品种类，获取新产品种类所属的id 用于之后与新增产品绑定
       _context.ProductClasses.Add(map);
       _context.SaveChanges();
@@ -225,6 +229,7 @@ namespace CosmosManagementApi.Controllers
         BuyingPrice = map.BuyingPrice,
         SellingPrice = map.SellingPrice,
         Category = map.Category,
+        BigCategory = map.BigCategory,
         Storage = map.Storage,
         ProductId = map.ProductId,
       };
@@ -249,6 +254,9 @@ namespace CosmosManagementApi.Controllers
       }
       else
       {
+        if(value.Category != null){
+            value.BigCategory = value.Category; //如更新 则为Category
+        }
         _mapper.Map(value, update); //AutoMapper 更新Customer
 
         _context.SaveChanges(); //保存变更

@@ -51,6 +51,8 @@ namespace CosmosManagementApi.Dtos
 
     public string? Category { get; set; }
 
+    public string? BigCategory { get; set; }
+
 
     public int? Storage{ get; set; }
 
